@@ -67,8 +67,8 @@ body{padding-bottom:84px}
 <div id="md"><div id="mb"></div></div>
 <script>
 const R=["Microfonista 1","Microfonista 2","Audio","Video","Podio","Usciere Zoom"];
-const P=["Alessandro Caruso","Andrea Caruso","Nuccio Cimminata","Filippo Fiorito","Fabio La Ferrara","Giuseppe Piccolini","Lemuel Ricevuto","Fineas Falco","Carmelo Signorello","Giuseppe Marchese","Samuele Messina","Samuele Fiducia"];
-const MO=[2,3],Y=[0,9,10,11],$=id=>document.getElementById(id);
+const P=["Alessandro Caruso","Andrea Caruso","Nuccio Cimminata","Fabio La Ferrara","Giuseppe Piccolini","Lemuel Ricevuto","Fineas Falco","Carmelo Signorello","Giuseppe Marchese","Samuele Messina","Samuele Fiducia"];
+const MO=[2],Y=[0,8,9,10],$=id=>document.getElementById(id);
 let seed=Date.now()%99999;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 const iso=d=>d.toISOString().slice(0,10);
 function dates(y,days){const o=[];for(let d=new Date(Date.UTC(y,0,1));d.getUTCFullYear()===y;d.setUTCDate(d.getUTCDate()+1))if(days.includes(d.getUTCDay())&&iso(d)>="2026-11-01")o.push(iso(d));return o}
@@ -76,18 +76,18 @@ function perms(w,cnt,fn,pr){const u=Array(6).fill(false),a=Array(6);(function g(
 for(let i=0;i<6;i++){if(u[i])continue;const p=w[i];if(MO.includes(p)&&r>1)continue;if(pr&&pr[p]===r)continue;if(r===3&&Y.includes(p)&&Y.includes(a[2]))continue;u[i]=true;a[r]=p;g(r+1);u[i]=false}})(0)}
 const ok=w=>{const n=w.filter(p=>!MO.includes(p));return n.length>=4&&n.some(p=>!Y.includes(p))};
 function gen(){const out={};let prev=[],pr={};
-[[2026,[1,6]],[2027,[2,0]]].forEach(([y,d])=>{const tot=Array(12).fill(0),cnt=P.map(()=>R.map(()=>0));
+[[2026,[1,6]],[2027,[2,0]]].forEach(([y,d])=>{const tot=Array(P.length).fill(0),cnt=P.map(()=>R.map(()=>0));
 out[y]=dates(y,d).map(dt=>{
 const sc=P.map((_,p)=>({p,s:tot[p]*10+(prev.includes(p)?3:0)+rnd()*6})).sort((a,b)=>a.s-b.s).map(x=>x.p);
 let w=sc.slice(0,6);
-if(!ok(w))o:for(let i=5;i>=0;i--)for(let j=6;j<12;j++){const t=w.slice();t[i]=sc[j];if(ok(t)){w=t;break o}}
+if(!ok(w))o:for(let i=5;i>=0;i--)for(let j=6;j<P.length;j++){const t=w.slice();t[i]=sc[j];if(ok(t)){w=t;break o}}
 let best=null,bc=1e9;const tw=(w,q)=>{best=null;bc=1e9;perms(w,cnt,a=>{let c=rnd()*.5;a.forEach((p,r)=>c+=cnt[p][r]*cnt[p][r]*2+cnt[p][r]);if(c<bc){bc=c;best=a}},q);return best};
-if(!tw(w,pr))o2:{for(let i=5;i>=0;i--)for(let j=6;j<12;j++){const t=w.slice();t[i]=sc[j];if(ok(t)&&tw(t,pr)){w=t;break o2}}tw(w,null)}
+if(!tw(w,pr))o2:{for(let i=5;i>=0;i--)for(let j=6;j<P.length;j++){const t=w.slice();t[i]=sc[j];if(ok(t)&&tw(t,pr)){w=t;break o2}}tw(w,null)}
 pr={};best.forEach((p,r)=>pr[p]=r);
 best.forEach((p,r)=>{cnt[p][r]++;tot[p]++});prev=w;return{d:dt,a:best,e:[]}})});return out}
-let S;try{S=JSON.parse(localStorage.getItem("av5"))}catch(e){}
+let S;try{S=JSON.parse(localStorage.getItem("av6"))}catch(e){}
 if(!S||!S.D)S={D:gen(),log:[]};
-const save=()=>{try{localStorage.setItem("av5",JSON.stringify(S))}catch(e){}};
+const save=()=>{try{localStorage.setItem("av6",JSON.stringify(S))}catch(e){}};
 let year=2026,M=Math.min(23,Math.max(10,(new Date().getFullYear()-2026)*12+new Date().getMonth())),sel=-1,ed=null;
 const RL=["🎤 MIC 1","🎤 MIC 2","🎧 AUDIO","🎥 VIDEO","📖 PODIO","💻 ZOOM"],RS=["🎤1","🎤2","🎧","🎥","📖","💻"];
 const fmtL=d=>new Date(d+"T00:00:00Z").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"});
@@ -136,30 +136,50 @@ rgs=false;$("rg").textContent="Rigenera";S={D:gen(),log:[]};save();render()};
 function avData(){year=2026+Math.floor(M/12);const mm=String(M%12+1).padStart(2,"0"),days=S.D[year].filter(s=>s.d.slice(5,7)===mm);
 return{days,rows:P.map((n,p)=>{const busy=[],free=[];days.forEach(s=>{const r=s.a.indexOf(p);if(r>=0)busy.push(fmt(s.d)+" ("+RL[r]+")");else free.push(fmt(s.d))});return{n,busy,free}})}}
 function avText(){const d=avData();return "DISPONIBILITÀ – "+MN[M%12]+" "+year+"\nTurni Audio/Video del mese: "+d.days.map(s=>fmt(s.d)).join(", ")+"\nTutti gli altri giorni del mese le persone sono libere.\n\n"+d.rows.map(x=>x.n+"\n  Occupato (Audio/Video): "+(x.busy.join(", ")||"mai")+"\n  Libero nei giorni di turno: "+(x.free.join(", ")||"mai")).join("\n\n")}
-const AV=[[5,"G. Piccolini"],[4,"Fabio"],[1,"An. Caruso"],[0,"Al. Caruso"],[8,"Carmelo"],[2,"Nuccio"],[3,"Filippo"]],RE=["🎤","🎤","🎧","🎥","📖","💻"];
+const AV=[[4,"G. Piccolini"],[3,"Fabio"],[1,"An. Caruso"],[0,"Al. Caruso"],[7,"Carmelo"],[2,"Nuccio"]],RE=["🎤","🎤","🎧","🎥","📖","💻"];
 function freeData(){year=2026+Math.floor(M/12);const mo=M%12,mm=String(mo+1).padStart(2,"0"),days=[],bus=AV.map(()=>({}));
 S.D[year].forEach(s=>{if(s.d.slice(5,7)!==mm)return;const day=+s.d.slice(8);days.push(day);AV.forEach(([p],k)=>{const r=s.a.indexOf(p);if(r>=0)bus[k][day]=r})});return{mo,days,bus}}
 const dl=(y,mo,d,o)=>new Date(Date.UTC(y,mo,d)).toLocaleDateString("it-IT",Object.assign({timeZone:"UTC"},o));
 const rng=a=>{const o=[];for(let i=0;i<a.length;){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;o.push(j>i?a[i]+"–"+a[j]:""+a[i]);i=j+1}return o.join(", ")};
 function freeText(){const d=freeData();return "✅ DISPONIBILITÀ – "+MN[d.mo].toUpperCase()+" "+year+"\n(giorni di turno Audio/Video in cui sono liberi)\n\n"+AV.map(([p,l],k)=>"👤 "+l+"\nLibero: "+(d.days.filter(x=>!(x in d.bus[k])).map(x=>dl(year,d.mo,x,{weekday:"short",day:"numeric"})).join(", ")||"mai")).join("\n\n")}
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.fill()}
-function drawFree(cv){const d=freeData(),n=d.days.length,W=1400,L=300,cw=(W-L-40)/n,rh=96,top=250,H=top+AV.length*rh+150,F="system-ui,-apple-system,sans-serif";cv.width=W;cv.height=H;const g=cv.getContext("2d");
-g.fillStyle="#fff";g.fillRect(0,0,W,H);g.fillStyle="#1e3a8a";g.fillRect(0,0,W,150);g.textBaseline="middle";g.textAlign="left";
-g.fillStyle="#fff";g.font="bold 54px "+F;g.fillText("🎧 Audio/Video · Disponibilità",40,56);
-g.font="36px "+F;g.fillStyle="#bfdbfe";g.fillText(MN[d.mo]+" "+year+" · giorni di turno in cui sono liberi",40,112);
-d.days.forEach((day,i)=>{const x=L+i*cw;g.textAlign="center";g.fillStyle="#475569";g.font="bold 28px "+F;g.fillText(dl(year,d.mo,day,{weekday:"short"}).toUpperCase(),x+cw/2,190);g.fillStyle="#0f172a";g.font="bold 54px "+F;g.fillText(day,x+cw/2,232)});
-AV.forEach(([p,l],k)=>{const y=top+k*rh;g.strokeStyle="#e2e8f0";g.lineWidth=2;g.beginPath();g.moveTo(20,y);g.lineTo(W-20,y);g.stroke();
-g.textAlign="left";g.fillStyle="#0f172a";g.font="bold 40px "+F;g.fillText(l,30,y+rh/2);
-d.days.forEach((day,i)=>{const x=L+i*cw+5,w=cw-10,r=d.bus[k][day],b=r!==undefined;
-g.fillStyle=b?"#ef4444":"#22c55e";rr(g,x,y+10,w,rh-20,14);g.fillStyle="#fff";g.textAlign="center";g.font=(b?"40px ":"bold 48px ")+F;g.fillText(b?RE[r]:"✓",x+w/2,y+rh/2+2)})});
-const ly=top+AV.length*rh+62;g.textAlign="left";g.font="32px "+F;
-g.fillStyle="#22c55e";rr(g,40,ly-20,40,40,8);g.fillStyle="#0f172a";g.fillText("Libero",96,ly);
-g.fillStyle="#ef4444";rr(g,290,ly-20,40,40,8);g.fillStyle="#0f172a";g.fillText("Occupato in Audio/Video (con l'emoji del ruolo)",346,ly)}
-$("dv").onclick=()=>{$("mb").innerHTML=`<b>Disponibilità · ${MN[M%12]} ${year}</b><div class="sub">Verde = libero · Rosso = occupato. Scorri l'anteprima di lato.</div><div style="overflow-x:auto"><canvas id="cv" style="width:720px;border:1px solid var(--bd);border-radius:8px"></canvas></div><button class="pr" id="si">Condividi immagine</button><button id="stx">Condividi testo</button><button id="cl">Chiudi</button>`;
+function drawFree(cv){const d=freeData(),n=d.days.length,W=2400,H=1697,F="system-ui,-apple-system,Helvetica,Arial,sans-serif";cv.width=W;cv.height=H;const g=cv.getContext("2d");
+g.fillStyle="#fff";g.fillRect(0,0,W,H);g.fillStyle="#1e3a8a";g.fillRect(0,0,W,230);g.fillStyle="#f59e0b";g.fillRect(0,230,W,10);
+try{g.save();g.beginPath();g.arc(150,115,80,0,7);g.clip();g.drawImage($("lg"),70,35,160,160);g.restore()}catch(e){}
+g.textBaseline="middle";g.textAlign="left";g.fillStyle="#fff";g.font="bold 84px "+F;g.fillText("Disponibilità Audio/Video",270,92);
+g.fillStyle="#bfdbfe";g.font="48px "+F;g.fillText(MN[d.mo]+" "+year,270,170);
+g.textAlign="right";g.font="38px "+F;g.fillText("Per i responsabili dei reparti",W-70,115);
+g.textAlign="left";g.fillStyle="#475569";g.font="38px "+F;g.fillText("Giorni di turno Audio/Video del mese: per ogni volontario sono indicati i giorni in cui è libero e disponibile.",70,305);
+const L=640,R=240,x0=L,x1=W-70-R,cw=(x1-x0)/n,hy=360,hh=170,top=hy+hh,rows=AV.length,rh=Math.min(130,Math.floor((H-top-250)/rows));
+g.fillStyle="#eff6ff";g.fillRect(70,hy,W-140,hh);g.fillStyle="#1e3a8a";g.font="bold 40px "+F;g.textAlign="left";g.fillText("VOLONTARIO",100,hy+hh/2);g.textAlign="center";g.fillText("LIBERI",x1+R/2,hy+hh/2);
+d.days.forEach((day,i)=>{const cx=x0+i*cw+cw/2;g.textAlign="center";g.fillStyle="#475569";g.font="bold 36px "+F;g.fillText(dl(year,d.mo,day,{weekday:"short"}).toUpperCase(),cx,hy+38);
+g.fillStyle="#0f172a";g.font="bold 78px "+F;g.fillText(day,cx,hy+95);g.fillStyle="#64748b";g.font="30px "+F;g.fillText(dl(year,d.mo,day,{month:"short"}),cx,hy+143)});
+AV.forEach(([p,l],k)=>{const y=top+k*rh;if(k%2){g.fillStyle="#f8fafc";g.fillRect(70,y,W-140,rh)}
+g.strokeStyle="#e2e8f0";g.lineWidth=2;g.beginPath();g.moveTo(70,y+rh);g.lineTo(W-70,y+rh);g.stroke();
+g.textAlign="left";g.fillStyle="#0f172a";g.font="bold 46px "+F;g.fillText(P[p],100,y+rh/2);let f=0;
+d.days.forEach((day,i)=>{const b=day in d.bus[k],x=x0+i*cw+8,w=cw-16;if(!b)f++;
+g.fillStyle=b?"#fee2e2":"#22c55e";rr(g,x,y+14,w,rh-28,16);g.fillStyle=b?"#dc2626":"#fff";g.textAlign="center";g.font="bold "+(b?50:60)+"px "+F;g.fillText(b?"✕":"✓",x+w/2,y+rh/2+2)});
+g.fillStyle="#1e3a8a";g.font="bold 52px "+F;g.textAlign="center";g.fillText(f+" / "+n,x1+R/2,y+rh/2)});
+const ly=top+rows*rh+80;g.textAlign="left";g.font="36px "+F;
+g.fillStyle="#22c55e";rr(g,100,ly-24,48,48,10);g.fillStyle="#0f172a";g.fillText("Libero",166,ly);
+g.fillStyle="#fee2e2";rr(g,380,ly-24,48,48,10);g.fillStyle="#dc2626";g.font="bold 34px "+F;g.fillText("✕",391,ly);g.fillStyle="#0f172a";g.font="36px "+F;g.fillText("Occupato in Audio/Video",446,ly);
+g.fillStyle="#cbd5e1";g.fillRect(70,H-110,W-140,2);g.fillStyle="#64748b";g.font="30px "+F;g.fillText("Generato il "+new Date().toLocaleDateString("it-IT")+" · App Audio/Video",70,H-65);
+g.textAlign="right";g.fillText("Il calendario può subire variazioni per assenze o sostituzioni.",W-70,H-65)}
+function mkPdf(cv){const bin=atob(cv.toDataURL("image/jpeg",.92).split(",")[1]),n=bin.length,jb=new Uint8Array(n);for(let i=0;i<n;i++)jb[i]=bin.charCodeAt(i);
+const enc=new TextEncoder(),parts=[],off=[];let len=0;const push=b=>{if(typeof b==="string")b=enc.encode(b);parts.push(b);len+=b.length};
+push("%PDF-1.4\n");off[1]=len;push("1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n");
+off[2]=len;push("2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n");
+off[3]=len;push("3 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 842 595]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>\nendobj\n");
+off[4]=len;push("4 0 obj\n<</Type/XObject/Subtype/Image/Width "+cv.width+"/Height "+cv.height+"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length "+n+">>\nstream\n");push(jb);push("\nendstream\nendobj\n");
+const c="q 842 0 0 595 0 0 cm /Im0 Do Q";off[5]=len;push("5 0 obj\n<</Length "+c.length+">>\nstream\n"+c+"\nendstream\nendobj\n");
+const x=len;push("xref\n0 6\n0000000000 65535 f \n"+[1,2,3,4,5].map(i=>String(off[i]).padStart(10,"0")+" 00000 n \n").join("")+"trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n"+x+"\n%%EOF");
+return new Blob(parts,{type:"application/pdf"})}
+async function shareF(f){try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==="AbortError")return}
+const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
+$("dv").onclick=()=>{const nm="Disponibilita-"+MN[M%12]+"-"+year;$("mb").innerHTML=`<b>Disponibilità · ${MN[M%12]} ${year}</b><div class="sub">Documento pronto per i responsabili. Scorri l'anteprima di lato.</div><div style="overflow-x:auto"><canvas id="cv" style="width:900px;border:1px solid var(--bd);border-radius:8px"></canvas></div><button class="pr" id="sp">📄 Condividi PDF</button><button id="si">Condividi immagine</button><button id="stx">Condividi testo</button><button id="cl">Chiudi</button>`;
 $("md").style.display="flex";$("cl").onclick=close_;drawFree($("cv"));
-$("si").onclick=()=>$("cv").toBlob(async b=>{const f=new File([b],"Disponibilita-"+MN[M%12]+"-"+year+".png",{type:"image/png"});
-try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==="AbortError")return}
-const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});
+$("sp").onclick=()=>shareF(new File([mkPdf($("cv"))],nm+".pdf",{type:"application/pdf"}));
+$("si").onclick=()=>$("cv").toBlob(b=>shareF(new File([b],nm+".png",{type:"image/png"})));
 $("stx").onclick=async()=>{const t=freeText();try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e.name==="AbortError")return}try{await navigator.clipboard.writeText(t);$("stx").textContent="✓ Copiato"}catch(e){}}};
 
 function turniText(){year=2026+Math.floor(M/12);const mm=String(M%12+1).padStart(2,"0");
